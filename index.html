@@ -1,0 +1,328 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+.ui-wrap{position:relative;z-index:1}
+
+.toolbar{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:0.5px solid rgba(255,255,255,0.15);flex-wrap:wrap;background:rgba(255,255,255,0.07);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.toolbar-label{font-size:13px;font-weight:500;color:rgba(255,255,255,0.9)}
+.tbtn{font-size:12px;padding:6px 13px;border:0.5px solid rgba(255,255,255,0.25);border-radius:6px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.9);cursor:pointer;transition:background 0.15s}
+.tbtn:hover{background:rgba(255,255,255,0.2)}
+.search{font-size:12px;padding:6px 10px;border:0.5px solid rgba(255,255,255,0.2);border-radius:6px;background:rgba(255,255,255,0.08);color:#fff;min-width:160px}
+.search::placeholder{color:rgba(255,255,255,0.4)}
+.search:focus{outline:none;border-color:rgba(255,255,255,0.4)}
+
+.groups-wrap{padding:16px 18px 24px}
+
+.group-header{font-size:11px;font-weight:500;color:rgba(255,255,255,0.5);margin:0 0 8px;display:flex;align-items:center;gap:7px;letter-spacing:0.06em;text-transform:uppercase}
+.group-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+.badges-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:500;cursor:context-menu;border-width:1.5px;border-style:solid;user-select:none;transition:transform 0.12s,box-shadow 0.12s;position:relative}
+.badge:hover{transform:scale(1.06);box-shadow:0 2px 12px rgba(0,0,0,0.25)}
+.badge.bordered{background:rgba(0,0,0,0.08)!important;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.badge img{width:18px;height:18px;object-fit:contain;border-radius:2px}
+.badge-disabled{opacity:0.3}
+
+.ctx-menu{position:fixed;background:rgba(20,20,30,0.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:0.5px solid rgba(255,255,255,0.15);border-radius:10px;padding:4px 0;min-width:190px;z-index:9999}
+.ctx-menu button{display:block;width:100%;text-align:left;padding:8px 14px;font-size:13px;background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.88)}
+.ctx-menu button:hover{background:rgba(255,255,255,0.08)}
+.ctx-divider{height:0.5px;background:rgba(255,255,255,0.1);margin:4px 0}
+.ctx-label{padding:5px 14px 2px;font-size:11px;color:rgba(255,255,255,0.4);font-weight:500;text-transform:uppercase;letter-spacing:0.05em}
+
+.picker-overlay{position:fixed;inset:0;z-index:9998;background:transparent}
+.picker-panel{position:fixed;background:rgba(18,18,28,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:0.5px solid rgba(255,255,255,0.15);border-radius:12px;padding:16px;z-index:10000;min-width:248px}
+.picker-title{font-size:13px;font-weight:500;margin-bottom:12px;color:rgba(255,255,255,0.9)}
+.picker-swatch-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-bottom:12px}
+.swatch{width:24px;height:24px;border-radius:4px;cursor:pointer;border:1.5px solid transparent;transition:transform 0.1s}
+.swatch:hover{transform:scale(1.18)}
+.swatch.selected{border-color:#fff}
+.picker-hex-row{display:flex;align-items:center;gap:8px}
+.picker-hex-row input[type=color]{width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:4px}
+.picker-hex-input{flex:1;font-size:13px;padding:6px 10px;border:0.5px solid rgba(255,255,255,0.2);border-radius:6px;background:rgba(255,255,255,0.07);color:#fff}
+.picker-hex-input:focus{outline:none;border-color:rgba(255,255,255,0.45)}
+.picker-actions{display:flex;gap:8px;margin-top:12px}
+.picker-actions button{flex:1;padding:7px;font-size:13px;border-radius:6px;cursor:pointer;border:0.5px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.85)}
+.picker-actions .apply{background:rgba(255,255,255,0.15);color:#fff;border-color:rgba(255,255,255,0.35)}
+.picker-actions .apply:hover{background:rgba(255,255,255,0.25)}
+
+.style-toggle{display:flex;gap:6px;margin-bottom:6px}
+.style-pill{font-size:11px;padding:3px 10px;border-radius:20px;border:0.5px solid rgba(255,255,255,0.2);background:transparent;color:rgba(255,255,255,0.6);cursor:pointer;transition:all 0.15s}
+.style-pill.active{background:rgba(255,255,255,0.15);color:#fff;border-color:rgba(255,255,255,0.35)}
+
+.toast{position:fixed;bottom:20px;right:20px;background:rgba(20,20,30,0.95);backdrop-filter:blur(12px);color:rgba(255,255,255,0.9);padding:10px 16px;border-radius:8px;font-size:13px;z-index:99999;opacity:0;transform:translateY(8px);transition:all 0.25s;pointer-events:none;border:0.5px solid rgba(255,255,255,0.1)}
+.toast.show{opacity:1;transform:translateY(0)}
+.empty{padding:40px;text-align:center;color:rgba(255,255,255,0.35);font-size:14px}
+</style>
+
+<h2 class="sr-only">Badge color editor with animated grid background</h2>
+<canvas id="bg-canvas"></canvas>
+
+<div class="ui-wrap">
+  <div class="toolbar">
+    <span class="toolbar-label">Badge editor</span>
+    <button class="tbtn" onclick="document.getElementById('fileInput').click()">⬆ Import JSON</button>
+    <button class="tbtn" onclick="exportJSON()">⬇ Export JSON</button>
+    <input class="search" type="text" placeholder="Search badges…" oninput="renderAll()" id="searchBox">
+    <input type="file" id="fileInput" accept=".json" style="display:none" onchange="importFile(event)">
+  </div>
+  <div class="groups-wrap" id="groupsWrap"></div>
+</div>
+
+<div id="ctxMenu" class="ctx-menu" style="display:none"></div>
+<div id="pickerOverlay" class="picker-overlay" style="display:none" onclick="closePicker()"></div>
+<div id="pickerPanel" class="picker-panel" style="display:none"></div>
+<div id="toast" class="toast"></div>
+
+<script>
+const canvas = document.getElementById('bg-canvas');
+const ctx2d = canvas.getContext('2d');
+let W, H, dpr;
+
+const blooms = [
+  {x:0.15, y:0.3,  r:0.55, hue:220, phase:0,    speed:0.0007},
+  {x:0.75, y:0.2,  r:0.5,  hue:280, phase:2.1,  speed:0.0009},
+  {x:0.5,  y:0.75, r:0.6,  hue:190, phase:4.2,  speed:0.0006},
+  {x:0.85, y:0.7,  r:0.45, hue:340, phase:1.0,  speed:0.001},
+  {x:0.25, y:0.85, r:0.4,  hue:160, phase:3.1,  speed:0.0008},
+];
+
+function resize(){
+  dpr = 0.1;
+  W = window.innerWidth; H = window.innerHeight;
+  canvas.width = W*dpr; canvas.height = H*dpr;
+  canvas.style.width = W+'px'; canvas.style.height = H+'px';
+  ctx2d.scale(dpr, dpr);
+}
+
+function drawBg(t){
+  ctx2d.clearRect(0,0,W,H);
+  ctx2d.fillStyle='#0d0d18';
+  ctx2d.fillRect(0,0,W,H);
+
+  blooms.forEach(b=>{
+    const pulse = 0.85 + 0.15*Math.sin(t*b.speed*1.3+b.phase);
+    const r = b.r * Math.min(W,H) * pulse;
+    const x = b.x*W + Math.sin(t*b.speed*0.7+b.phase)*W*0.04;
+    const y = b.y*H + Math.cos(t*b.speed*0.5+b.phase)*H*0.04;
+    const g = ctx2d.createRadialGradient(x,y,0,x,y,r);
+    const alpha = 0.13 + 0.05*Math.sin(t*b.speed+b.phase*1.3);
+    g.addColorStop(0, `hsla(${b.hue},80%,65%,${alpha})`);
+    g.addColorStop(0.5,`hsla(${b.hue+20},70%,55%,${alpha*0.4})`);
+    g.addColorStop(1, `hsla(${b.hue+40},60%,45%,0)`);
+    ctx2d.fillStyle=g;
+    ctx2d.fillRect(0,0,W,H);
+  });
+
+  const gs = 40;
+  ctx2d.strokeStyle='rgba(255,255,255,0.035)';
+  ctx2d.lineWidth=0.5;
+  for(let x=0;x<=W;x+=gs){ctx2d.beginPath();ctx2d.moveTo(x,0);ctx2d.lineTo(x,H);ctx2d.stroke()}
+  for(let y=0;y<=H;y+=gs){ctx2d.beginPath();ctx2d.moveTo(0,y);ctx2d.lineTo(W,y);ctx2d.stroke()}
+
+  ctx2d.strokeStyle='rgba(255,255,255,0.055)';
+  const bs = 200;
+  for(let x=0;x<=W;x+=bs){ctx2d.beginPath();ctx2d.moveTo(x,0);ctx2d.lineTo(x,H);ctx2d.stroke()}
+  for(let y=0;y<=H;y+=bs){ctx2d.beginPath();ctx2d.moveTo(0,y);ctx2d.lineTo(W,y);ctx2d.stroke()}
+}
+
+let raf;
+function animate(t){
+  drawBg(t);
+  raf=requestAnimationFrame(animate);
+}
+resize();
+window.addEventListener('resize',()=>{ctx2d.setTransform(1,0,0,1,0,0);resize()});
+requestAnimationFrame(animate);
+
+const SWATCHES=['#FFFFFF','#F1EFE8','#D3D1C7','#888780','#444441','#2C2C2A','#111111','#000000','#E6F1FB','#B5D4F4','#85B7EB','#378ADD','#185FA5','#0C447C','#042C53','#EEEDFE','#CECBF6','#AFA9EC','#7F77DD','#534AB7','#3C3489','#26215C','#E1F5EE','#9FE1CB','#5DCAA5','#1D9E75','#0F6E56','#085041','#04342C','#EAF3DE','#C0DD97','#97C459','#639922','#3B6D11','#27500A','#173404','#FAEEDA','#FAC775','#EF9F27','#BA7517','#854F0B','#633806','#412402','#FAECE7','#F5C4B3','#F0997B','#D85A30','#993C1D','#712B13','#4A1B0C','#FBEAF0','#F4C0D1','#ED93B1','#D4537E','#993556','#72243E','#4B1528','#FCEBEB','#F7C1C1','#F09595','#E24B4A','#A32D2D','#791F1F','#501313','#FF6904','#FFBE01','#27C04F','#0095D5','#FB411C'];
+
+let data={filters:[],groups:[]};
+let pickerState={badgeId:null,prop:null,color:'#FFFFFF'};
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+function importFile(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{data=JSON.parse(ev.target.result);renderAll();showToast('Imported '+data.filters.length+' badges');}
+    catch{showToast('Error parsing JSON');}
+  };
+  reader.readAsText(file);e.target.value='';
+}
+
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='badges.json';a.click();
+  URL.revokeObjectURL(url);showToast('Exported!');
+}
+
+function getGroup(id){return data.groups.find(g=>g.id===id);}
+function getBadge(id){return data.filters.find(f=>f.id===id);}
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function renderAll(){
+  const q=(document.getElementById('searchBox').value||'').toLowerCase();
+  const wrap=document.getElementById('groupsWrap');
+  if(!data.filters.length){wrap.innerHTML='<div class="empty">Import a JSON file or use the embedded data below…</div>';return;}
+
+  const grouped={};
+  data.groups.forEach(g=>{grouped[g.id]=[];});
+  grouped['__ungrouped']=[];
+  data.filters.forEach(f=>{
+    if(q&&!f.name.toLowerCase().includes(q))return;
+    const key=f.groupId&&grouped[f.groupId]!==undefined?f.groupId:'__ungrouped';
+    grouped[key].push(f);
+  });
+
+  let html='';
+  [...data.groups.map(g=>g.id),'__ungrouped'].forEach(gid=>{
+    const list=grouped[gid];if(!list||!list.length)return;
+    const grp=getGroup(gid);
+    html+=`<div class="group-header"><span class="group-dot" style="background:${grp?grp.color:'#888'}"></span>${escHtml(grp?grp.name:'Ungrouped')}</div><div class="badges-row">`;
+    list.forEach(f=>{
+      const bordered=f.tagStyle==='bordered';
+      const tc=f.textColor||'#fff';
+      const bc=f.tagColor||'#666';
+      const brd=f.borderColor||bc;
+      const dis=f.isEnabled===false?' badge-disabled':'';
+      const borderedClass=bordered?' bordered':'';
+      let style=`color:${tc};border-color:${brd};`;
+      if(!bordered)style+=`background:${bc};`;
+      html+=`<span class="badge${dis}${borderedClass}" id="badge-${f.id}" style="${style}" oncontextmenu="openCtx(event,'${f.id}')">`;
+      if(f.imageURL)html+=`<img src="${escHtml(f.imageURL)}" alt="" onerror="this.style.display='none'">`;
+      html+=`${escHtml(f.name)}</span>`;
+    });
+    html+='</div>';
+  });
+  if(!html)html='<div class="empty">No badges match.</div>';
+  wrap.innerHTML=html;
+}
+
+function openCtx(e,id){
+  e.preventDefault();
+  const m=document.getElementById('ctxMenu');
+  const f=getBadge(id);
+  const isBordered=f.tagStyle==='bordered';
+  m.innerHTML=`
+    <div class="ctx-label">${escHtml(f.name)}</div>
+    <div class="ctx-divider"></div>
+    <button onclick="openPicker('${id}','tagColor')">🎨 Tag color</button>
+    <button onclick="openPicker('${id}','borderColor')">🖌 Border color</button>
+    <button onclick="openPicker('${id}','textColor')">✏️ Text color</button>
+    <div class="ctx-divider"></div>
+    <button onclick="toggleStyle('${id}')">${isBordered?'⬛ Switch to filled':'⬜ Switch to bordered'}</button>
+    <button onclick="toggleEnabled('${id}')">${f.isEnabled===false?'✅ Enable':'🚫 Disable'}</button>
+  `;
+  m.style.display='block';
+  let x=e.clientX,y=e.clientY;
+  if(x+200>window.innerWidth)x=window.innerWidth-210;
+  if(y+200>window.innerHeight)y=window.innerHeight-210;
+  m.style.left=x+'px';m.style.top=y+'px';
+  document.addEventListener('mousedown',closeCtxOutside,{once:true});
+}
+
+function closeCtxOutside(e){
+  const m=document.getElementById('ctxMenu');
+  if(!m.contains(e.target))m.style.display='none';
+}
+
+function toggleStyle(id){
+  document.getElementById('ctxMenu').style.display='none';
+  const f=getBadge(id);if(!f)return;
+  f.tagStyle=f.tagStyle==='bordered'?'filled':'bordered';
+  renderAll();showToast('Style: '+f.tagStyle);
+}
+
+function toggleEnabled(id){
+  document.getElementById('ctxMenu').style.display='none';
+  const f=getBadge(id);if(!f)return;
+  f.isEnabled=f.isEnabled===false?true:false;
+  renderAll();showToast(f.isEnabled?'Enabled':'Disabled');
+}
+
+function openPicker(id,prop){
+  document.getElementById('ctxMenu').style.display='none';
+  const f=getBadge(id);if(!f)return;
+  pickerState={badgeId:id,prop,color:f[prop]||'#ffffff'};
+  const panel=document.getElementById('pickerPanel');
+  const overlay=document.getElementById('pickerOverlay');
+  const label={tagColor:'Tag color',borderColor:'Border color',textColor:'Text color'}[prop];
+
+  panel.innerHTML=`
+    <div class="picker-title">${label} — ${escHtml(f.name)}</div>
+    <div class="picker-swatch-grid" id="swatchGrid"></div>
+    <div class="picker-hex-row">
+      <input type="color" id="nativePicker" value="${pickerState.color}" oninput="syncFromNative(this.value)">
+      <input class="picker-hex-input" type="text" id="hexInput" value="${pickerState.color}" maxlength="7" oninput="syncFromHex(this.value)">
+    </div>
+    <div class="picker-actions">
+      <button onclick="closePicker()">Cancel</button>
+      <button class="apply" onclick="applyColor()">Apply</button>
+    </div>
+  `;
+
+  const grid=panel.querySelector('#swatchGrid');
+  SWATCHES.forEach(hex=>{
+    const sw=document.createElement('button');
+    sw.className='swatch'+(hex.toUpperCase()===pickerState.color.toUpperCase()?' selected':'');
+    sw.style.background=hex;sw.title=hex;
+    sw.onclick=()=>{
+      pickerState.color=hex;
+      panel.querySelector('#hexInput').value=hex;
+      panel.querySelector('#nativePicker').value=hex;
+      grid.querySelectorAll('.swatch').forEach(s=>s.classList.toggle('selected',s.title.toUpperCase()===hex.toUpperCase()));
+      previewColor(hex);
+    };
+    grid.appendChild(sw);
+  });
+
+  overlay.style.display='block';
+  const px=Math.max(10,Math.min(window.innerWidth/2-120,window.innerWidth-260));
+  const py=Math.max(10,window.innerHeight/2-160);
+  panel.style.left=px+'px';panel.style.top=py+'px';
+  panel.style.display='block';
+}
+
+function syncFromNative(val){pickerState.color=val;document.getElementById('hexInput').value=val;previewColor(val);}
+function syncFromHex(val){if(/^#[0-9a-fA-F]{6}$/.test(val)){pickerState.color=val;document.getElementById('nativePicker').value=val;previewColor(val);}}
+
+function previewColor(hex){
+  const{badgeId,prop}=pickerState;
+  const el=document.getElementById('badge-'+badgeId);if(!el)return;
+  const f=getBadge(badgeId);
+  if(prop==='tagColor'&&f.tagStyle!=='bordered')el.style.background=hex;
+  if(prop==='borderColor')el.style.borderColor=hex;
+  if(prop==='textColor')el.style.color=hex;
+}
+
+function applyColor(){
+  const{badgeId,prop,color}=pickerState;
+  const f=getBadge(badgeId);if(f)f[prop]=color;
+  closePicker();renderAll();showToast('Color updated!');
+}
+
+function closePicker(){
+  document.getElementById('pickerPanel').style.display='none';
+  document.getElementById('pickerOverlay').style.display='none';
+}
+
+window.addEventListener('click',e=>{
+  const ctx=document.getElementById('ctxMenu');
+  if(ctx.style.display!=='none'&&!ctx.contains(e.target))ctx.style.display='none';
+});
+
+const RAW='{"filters":[{"borderColor":"#27C04F","groupId":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","id":"21e14dc7-be82-5f92-9e34-a8d6566a6290","imageURL":"https://raw.githubusercontent.com/nobnobz/Omni-Template-Bot-Bid-Raiser/main/Other/regex%20tags/new%20tiers/remux%20t1.png","isEnabled":true,"name":"REMUX 1","pattern":"","tagColor":"#27C04F","tagStyle":"filled","textColor":"#FFFFFF","type":"filter"},{"borderColor":"#27C04F","groupId":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","id":"90c53162-4c63-5741-95e0-ecd06fe31bf1","imageURL":"https://raw.githubusercontent.com/nobnobz/Omni-Template-Bot-Bid-Raiser/main/Other/regex%20tags/new%20tiers/remux%20t2.png","isEnabled":true,"name":"REMUX 2","pattern":"","tagColor":"#27C04F","tagStyle":"filled","textColor":"#FFFFFF","type":"filter"},{"borderColor":"#27C04F","groupId":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","id":"25cec483-bbda-5ec3-b61f-64453dbf2e2e","imageURL":"https://raw.githubusercontent.com/nobnobz/Omni-Template-Bot-Bid-Raiser/main/Other/regex%20tags/new%20tiers/remux%20t3.png","isEnabled":true,"name":"REMUX 3","pattern":"","tagColor":"#27C04F","tagStyle":"filled","textColor":"#FFFFFF","type":"filter"},{"groupId":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","id":"c0ad5e2e-ed9d-5abd-a13a-64cce37547a2","imageURL":"https://raw.githubusercontent.com/nobnobz/Omni-Template-Bot-Bid-Raiser/main/Other/regex%20tags/new%20tiers/remux%20unranked.png","isEnabled":true,"name":"REMUX Unranked","pattern":"","tagColor":"#27C04F","tagStyle":"bordered","textColor":"#FFFFFF","type":"filter"},{"borderColor":"#0095D5","groupId":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","id":"f16f72e3-1670-5fb3-b674-fabb033a9456","isEnabled":true,"name":"BLU-RAY 1","pattern":"","tagColor":"#0095D5","tagStyle":"filled","textColor":"#FFFFFF","type":"filter"},{"borderColor":"#0095D5","groupId":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","id":"3eeef69f-13a1-5b04-8db5-564fc8e6ab28","isEnabled":true,"name":"BLU-RAY 2","pattern":"","tagColor":"#0095D5","tagStyle":"filled","textColor":"#FFFFFF","type":"filter"},{"borderColor":"#0095D5","groupId":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","id":"c6c22559-0e46-50bd-a35a-ba9d280c7e2e","isEnabled":true,"name":"BLU-RAY 3","pattern":"","tagColor":"#0095D5","tagStyle":"filled","textColor":"#FFFFFF","type":"filter"},{"borderColor":"#0095D5","groupId":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","id":"5f13c54e-c3c9-5465-8d40-20035cf92db4","isEnabled":true,"name":"BLU-RAY 4","pattern":"","tagColor":"#0095D5","tagStyle":"filled","textColor":"#FFFFFF","type":"filter"},{"borderColor":"#0095D5","groupId":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","id":"79429d97-c84e-5b68-ba86-989c7b53c196","isEnabled":true,"name":"BLU-RAY 5","pattern":"","tagColor":"#0095D5","tagStyle":"filled","textColor":"#FFFFFF","type":"filter"},{"borderColor":"#0095D5","groupId":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","id":"4e271fd9-bbe2-58fa-a198-a78e6c3c0351","isEnabled":true,"name":"BLU-RAY 6","pattern":"","tagColor":"#0095D5","tagStyle":"filled","textColor":"#FFFFFF","type":"filter"},{"borderColor":"#0095D5","groupId":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","id":"f520f0ea-e9fb-5883-b912-9f5db4c2f04c","isEnabled":true,"name":"BLU-RAY 7","pattern":"","tagColor":"#0095D5","tagStyle":"filled","textColor":"#FFFFFF","type":"filter"},{"borderColor":"#0095D5","groupId":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","id":"72458de0-9754-5fbb-b2d4-7e3d7689c5ad","isEnabled":true,"name":"BLU-RAY 8","pattern":"","tagColor":"#0095D5","tagStyle":"filled","textColor":"#FFFFFF","type":"filter"},{"borderColor":"#0095D5","groupId":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","id":"acf8f544-3810-5b00-ac72-4835d3438e1a","isEnabled":true,"name":"BLU-RAY Unranked","pattern":"","tagColor":"#0095D5","tagStyle":"bordered","textColor":"#0095D5","type":"filter"},{"borderColor":"#FF6904","groupId":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","id":"164db005-2bc2-590b-b7a0-3fb0e66bcde7","isEnabled":true,"name":"WEB 1","pattern":"","tagColor":"#FF6904","tagStyle":"filled","textColor":"#FFFFFF","type":"filter"},{"borderColor":"#FF6904","groupId":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","id":"d0077e5d-d0d4-5367-8f9b-06f11938953e","isEnabled":true,"name":"WEB 2","pattern":"","tagColor":"#FF6904","tagStyle":"filled","textColor":"#FFFFFF","type":"filter"},{"borderColor":"#FF6904","groupId":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","id":"ef2684f5-3bc9-5e62-bd0c-12707d3458f7","isEnabled":true,"name":"WEB 3","pattern":"","tagColor":"#FF6904","tagStyle":"filled","textColor":"#FFFFFF","type":"filter"},{"borderColor":"#FF6904","groupId":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","id":"cbb353b1-8423-5df5-8a3a-daf305834c06","isEnabled":true,"name":"WEB 4","pattern":"","tagColor":"#FF6904","tagStyle":"filled","textColor":"#FFFFFF","type":"filter"},{"borderColor":"#FF6904","groupId":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","id":"aa2d2b3d-6ae8-5da9-9dcf-504f70087508","isEnabled":true,"name":"WEB 5","pattern":"","tagColor":"#FF6904","tagStyle":"filled","textColor":"#FFFFFF","type":"filter"},{"borderColor":"#FF6904","groupId":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","id":"9da62467-ed79-5b63-9061-4c00231dcb56","isEnabled":true,"name":"WEB 6","pattern":"","tagColor":"#FF6904","tagStyle":"filled","textColor":"#FFFFFF","type":"filter"},{"borderColor":"#FF6904","groupId":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","id":"4c04b5c6-2077-5c46-b7cd-6709391fcd37","isEnabled":true,"name":"WEB Unranked","pattern":"","tagColor":"#FF6904","tagStyle":"bordered","textColor":"#FF6904","type":"filter"},{"borderColor":"#FFBE01","groupId":"3f2e1d0c-9b8a-4f7e-8d6c-5b4a39281716","id":"5f758265-9c4c-5aa5-bd5f-547553cd993d","isEnabled":true,"name":"SEADEX Release","pattern":"","tagColor":"#FFBE01","tagStyle":"filled","textColor":"#0e0e0e","type":"filter"},{"groupId":"550e8400-e29b-41d4-a716-446655440000","id":"29075787-3ab6-539d-aee4-2245d93f115a","isEnabled":true,"name":"2160p","pattern":"","tagColor":"#FFBE01","tagStyle":"filled","textColor":"#0e0e0e","type":"filter","borderColor":"#FFBE01"},{"groupId":"550e8400-e29b-41d4-a716-446655440000","id":"0b6cb68b-9b86-5b7b-9d90-37222bde6d14","isEnabled":true,"name":"1080p","pattern":"","tagColor":"#FF6904","tagStyle":"filled","textColor":"#FFFFFF","type":"filter","borderColor":"#FF6904"},{"groupId":"550e8400-e29b-41d4-a716-446655440000","id":"0d33e380-b632-566f-a57f-89ab9137313e","isEnabled":true,"name":"720p","pattern":"","tagColor":"#FB411C","tagStyle":"filled","textColor":"#FFFFFF","type":"filter","borderColor":"#FB411C"},{"groupId":"3f2e1d0c-9b8a-4f7e-8d6c-5b4a39281716","id":"a542b0b8-8bec-567a-ac42-50e87ec3e11b","isEnabled":true,"name":"IMAX","pattern":"","tagColor":"#FFBE01","tagStyle":"filled","textColor":"#0e0e0e","type":"filter","borderColor":"#FFBE01"},{"groupId":"6ba7b810-9dad-11d1-80b4-00c04fd430c8","id":"9be3e5a6-b81c-5659-b771-e2b111c2d496","isEnabled":true,"name":"DV","pattern":"","tagColor":"#FFBE01","tagStyle":"filled","textColor":"#0e0e0e","type":"filter","borderColor":"#FFBE01"},{"groupId":"6ba7b810-9dad-11d1-80b4-00c04fd430c8","id":"1f393f30-df1f-547e-97a7-b6b81404d8b5","isEnabled":true,"name":"HDR10+","pattern":"","tagColor":"#FFBE01","tagStyle":"filled","textColor":"#0e0e0e","type":"filter","borderColor":"#FFBE01"},{"groupId":"6ba7b810-9dad-11d1-80b4-00c04fd430c8","id":"c2d8eca4-de97-53e4-b151-418c8b88607d","isEnabled":true,"name":"HDR10","pattern":"","tagColor":"#FFBE01","tagStyle":"filled","textColor":"#0e0e0e","type":"filter","borderColor":"#FFBE01"},{"groupId":"6ba7b810-9dad-11d1-80b4-00c04fd430c8","id":"81fcb635-5677-5e0b-85c9-77fd994d0091","isEnabled":true,"name":"HDR","pattern":"","tagColor":"#FFBE01","tagStyle":"filled","textColor":"#0e0e0e","type":"filter","borderColor":"#FFBE01"},{"groupId":"8e4b6f8e-2c1e-4f6b-9e8d-3f7a9d1c2e3f","id":"1e376aee-96c7-53cb-87e6-ea82d34afca0","isEnabled":true,"name":"ATMOS","pattern":"","tagColor":"#FFFFFF","tagStyle":"filled","textColor":"#0e0e0e","type":"filter","borderColor":"#FFFFFF"},{"borderColor":"#FFFFFF","groupId":"8e4b6f8e-2c1e-4f6b-9e8d-3f7a9d1c2e3f","id":"6f4637af-d45c-5ef9-9a35-7adc61ab5a0e","isEnabled":true,"name":"TRUEHD","pattern":"","tagColor":"#FFFFFF","tagStyle":"filled","textColor":"#0e0e0e","type":"filter"},{"groupId":"8e4b6f8e-2c1e-4f6b-9e8d-3f7a9d1c2e3f","id":"4309bea6-d424-51f4-8099-0deabacfc306","isEnabled":true,"name":"DTS-X","pattern":"","tagColor":"#FFFFFF","tagStyle":"filled","textColor":"#0e0e0e","type":"filter","borderColor":"#FFFFFF"},{"groupId":"8e4b6f8e-2c1e-4f6b-9e8d-3f7a9d1c2e3f","id":"85d60c3f-6e5c-5e06-996f-8232bb686109","isEnabled":true,"name":"DTS-HD MA","pattern":"","tagColor":"#FFFFFF","tagStyle":"filled","textColor":"#0e0e0e","type":"filter","borderColor":"#FFFFFF"},{"groupId":"8e4b6f8e-2c1e-4f6b-9e8d-3f7a9d1c2e3f","id":"a47dc0b9-72ed-5bf9-bcba-5e92b602001c","isEnabled":true,"name":"DTS-HD","pattern":"","tagColor":"#FFFFFF","tagStyle":"filled","textColor":"#0e0e0e","type":"filter","borderColor":"#FFFFFF"},{"groupId":"8e4b6f8e-2c1e-4f6b-9e8d-3f7a9d1c2e3f","id":"138d9480-c83e-5735-aa9b-a0190464fbd5","isEnabled":true,"name":"DOLBY DIGITAL +","pattern":"","tagColor":"#FFFFFF","tagStyle":"filled","textColor":"#0e0e0e","type":"filter","borderColor":"#FFFFFF"},{"groupId":"8e4b6f8e-2c1e-4f6b-9e8d-3f7a9d1c2e3f","id":"da8db73e-5b47-560e-a543-abf02335db5c","isEnabled":true,"name":"DTS","pattern":"","tagColor":"#FFFFFF","tagStyle":"filled","textColor":"#0e0e0e","type":"filter","borderColor":"#FFFFFF"},{"groupId":"8e4b6f8e-2c1e-4f6b-9e8d-3f7a9d1c2e3f","id":"3476e4a0-0f7d-57f1-bd45-13bfa2db5e42","isEnabled":true,"name":"DOLBY DIGITAL","pattern":"","tagColor":"#FFFFFF","tagStyle":"filled","textColor":"#0e0e0e","type":"filter","borderColor":"#FFFFFF"},{"groupId":"9f8e7d6c-3b2a-4f1e-9c8d-5a6b7e4f3d2c","id":"343880da-882c-5dd8-8686-aee04111d735","isEnabled":true,"name":"7.1 CH","pattern":"","tagColor":"#FFFFFF","tagStyle":"filled","textColor":"#0e0e0e","type":"filter","borderColor":"#FFFFFF"},{"groupId":"9f8e7d6c-3b2a-4f1e-9c8d-5a6b7e4f3d2c","id":"59853061-bc8f-5545-b392-644c22267ef8","isEnabled":true,"name":"6.1 CH","pattern":"","tagColor":"#FFFFFF","tagStyle":"filled","textColor":"#0e0e0e","type":"filter","borderColor":"#FFFFFF"},{"groupId":"9f8e7d6c-3b2a-4f1e-9c8d-5a6b7e4f3d2c","id":"e3ab9d1e-9064-53ca-b405-354e40f2455a","isEnabled":true,"name":"5.1 CH","pattern":"","tagColor":"#FFFFFF","tagStyle":"filled","textColor":"#0e0e0e","type":"filter","borderColor":"#FFFFFF"}],"groups":[{"color":"#96CEB4","id":"7c211433-9f2b-4e2f-9b8c-2f9a8e8c8b1e","isExpanded":true,"name":"Media Source"},{"color":"#4ECDC4","id":"550e8400-e29b-41d4-a716-446655440000","isExpanded":true,"name":"Resolution"},{"color":"#FF6B6B","id":"6ba7b810-9dad-11d1-80b4-00c04fd430c8","isExpanded":true,"name":"Dynamic Range"},{"color":"#45B7D1","id":"8e4b6f8e-2c1e-4f6b-9e8d-3f7a9d1c2e3f","isExpanded":true,"name":"Audio"},{"color":"#FFD700","id":"9f8e7d6c-3b2a-4f1e-9c8d-5a6b7e4f3d2c","isExpanded":true,"name":"Audio Channels"},{"color":"#C792EA","id":"3f2e1d0c-9b8a-4f7e-8d6c-5b4a39281716","isExpanded":true,"name":"Special Tags"}]}';
+
+try{const p=JSON.parse(RAW);data.groups=p.groups;data.filters=p.filters;}catch(e){}
+renderAll();
+</script>
